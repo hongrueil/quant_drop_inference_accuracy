@@ -15,13 +15,18 @@ which has 10000 test data from mnist
 //#define in_num 5000
 #define mean 0.1307
 #define sd 0.3081
+// #define mean 0
+// #define sd 1
+#define quant_list_size 16
 
 
 /******* define what you want to do *******/
-#define drop
-// #define conv
-// #define norm
-// #define norm_l2
+
+//#define drop
+#define conv
+//#define norm
+//#define norm_l2
+//#define WEIGHT
 
 Buffer data_input = {
     .ndim = 3,
@@ -33,7 +38,7 @@ Buffer data_input = {
 
 
 /********** buffer A **********/
-fixed bufferA_data[11600] = {0};
+fixed bufferA_data[12000] = {0};
 Buffer bufferA_tensor = {
     .ndim = 0,
     .dims = {0},
@@ -42,7 +47,7 @@ Buffer bufferA_tensor = {
 };
 
 /********** buffer B **********/
-fixed bufferB_data[11600] = {0};
+fixed bufferB_data[12000] = {0};
 Buffer bufferB_tensor = {
     .ndim = 0,
     .dims = {0},
@@ -61,11 +66,11 @@ int main(int argc, char *argv[]) {
 
 
     // for select quantization channel
-    int quant_2d_list[6][40] = { {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, }, {25, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, }, {13, 25, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, }, {13, 19, 25, 35, 38, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, }, {6, 13, 16, 19, 23, 25, 26, 28, 35, 38, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, }, {1, 3, 4, 6, 9, 13, 15, 16, 19, 20, 23, 25, 26, 28, 30, 31, 33, 35, 36, 38, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, } };
-    //int quant_list[40] = {-1};
+    //int quant_2d_list[6][quant_list_size] = { {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, }, {39, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, }, {26, 39, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, }, {8, 21, 23, 26, 39, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, }, {3, 5, 6, 7, 8, 21, 23, 26, 32, 39, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, }, {0, 3, 4, 5, 6, 7, 8, 10, 11, 16, 20, 21, 22, 23, 26, 27, 32, 35, 36, 39, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, } };
+    //int quant_2d_list[6][40];
     
     // for counting the norm of each filter in conv2
-    double norm_l1[40] = {0};
+    //double norm_l1[40] = {0};
 
 
     int bit_length;
@@ -78,24 +83,20 @@ int main(int argc, char *argv[]) {
     //printf("input bit length: ");
     //scanf("%d",&bit_length);
     bit_length = atoi(argv[1]);
-    //printf("in num: ");
-    //scanf("%d",&in_num);
+
     in_num = atoi(argv[2]);
-    //printf("step_len: ");
-   // scanf("%d",&step_len);
+
     step_len = atoi(argv[3]);
-    //printf("step_start: ");
-    //scanf("%d",&step_start);
+
     step_start = atoi(argv[4]);
-    //printf("%d, %d , %d, %d\n",bit_length,in_num,step_len,step_start);
-    //printf("Step = %d, Start = %d\n",step_len, step_start);
-    select_num = atoi(argv[5]);
+
+    select_num = atoi(argv[5]); 
     
-    int *quant_list = &quant_2d_list[select_num][0];
-    //int quant_list[40] = {-1};
+    //int *quant_list = &quant_2d_list[select_num][0];
+    int quant_list[40] = {-1};
 
     /***** initialize quant list ******/
-    // for (int i = 0; i < 40; ++i) quant_list[i] = -1;
+    for (int i = 0; i < 40; ++i) quant_list[i] = -1;
 
     // /***** initialize quant list by step ******/
     // for (int i = 0; i < step_len; ++i) {
@@ -105,7 +106,7 @@ int main(int argc, char *argv[]) {
     //printf("\n");
 
     /******** show quant list*********/
-    for (int i = 0; i < 40; ++i) printf("%d, ",quant_list[i]);
+    //for (int i = 0; i < quant_list_size; ++i) printf("%d, ",quant_list[i]);
 
 
 
@@ -115,15 +116,15 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "fopen() failed.\n");
         exit(EXIT_FAILURE);
     }
-    //printf("222time = %d\n", time);
+    
     char str[2400];
     char *token;
     float input[28*28];
     fixed data_input_raw[28 * 28];
 
 
-    int class_list[10] = {0};
-    int wrong_list[10] = {0};
+    // int class_list[10] = {0};
+    // int wrong_list[10] = {0};
 
     for (int i = 0; i < in_num; ++i) {
         //printf("\nresult of %d input\n",in_num);
@@ -164,62 +165,74 @@ int main(int argc, char *argv[]) {
         //int bit_length  = 8;
         quant(bufferA, bit_length);
         conv2d_fir(bufferA, &conv1_w, &conv1_b, bufferB); swap_buffer(bufferA, bufferB);
-        
-        //relu(bufferA, bufferB); swap_buffer(bufferA, bufferB);
 
         
-        //dump_buf(bufferA);
         quant(bufferA, bit_length);
-        //dump_buf(bufferA);
         maxpool(bufferA, bufferB, 2); swap_buffer(bufferA, bufferB);
-    
-        quant(bufferA, bit_length);
-
-    #ifdef quant
-        conv2d_fir_quant(bufferA, &conv2_w, &conv2_b, bufferB, quant_list); swap_buffer(bufferA, bufferB);
-    
-    #endif
-
-    #ifdef norm
-        conv2d_fir_quant_norm(bufferA, &conv2_w, &conv2_b, bufferB, norm_l1, in_num); swap_buffer(bufferA, bufferB);
-    #endif
-
-    #ifdef norm_l2
-        conv2d_fir_quant_norm_l2(bufferA, &conv2_w, &conv2_b, bufferB, norm_l1, in_num); swap_buffer(bufferA, bufferB);
-    #endif
         
-    #ifdef conv
+
+        quant(bufferA, bit_length);
         conv2d_fir(bufferA, &conv2_w, &conv2_b, bufferB); swap_buffer(bufferA, bufferB);
-    #endif
 
-    #ifdef drop
-        conv2d_fir_dis(bufferA, &conv2_w, &conv2_b, bufferB, quant_list); swap_buffer(bufferA, bufferB);
-    #endif
-        //relu(bufferA, bufferB); swap_buffer(bufferA, bufferB);
-
-        // dump_buf(bufferA);
-        // quant(bufferA, bit_length);
         quant(bufferA, bit_length);
-        //dump_buf(bufferA);
-        
+        conv2d_fir(bufferA, &conv3_w, &conv3_b, bufferB); swap_buffer(bufferA, bufferB);
+
+        quant(bufferA, bit_length);
         maxpool(bufferA, bufferB, 2); swap_buffer(bufferA, bufferB);
+
+
+    // #ifdef quant
+    //     conv2d_fir_quant(bufferA, &conv2_w, &conv2_b, bufferB, quant_list); swap_buffer(bufferA, bufferB);
+    
+    // #endif
+
+    // #ifdef norm
+    //     conv2d_fir_quant_norm(bufferA, &conv2_w, &conv2_b, bufferB, norm_l1, in_num); swap_buffer(bufferA, bufferB);
+    // #endif
+
+    // #ifdef norm_l2
+    //     conv2d_fir_quant_norm_l2(bufferA, &conv2_w, &conv2_b, bufferB, norm_l1, in_num); swap_buffer(bufferA, bufferB);
+    // #endif
         
+    // #ifdef conv
+    //     conv2d_fir(bufferA, &conv2_w, &conv2_b, bufferB); swap_buffer(bufferA, bufferB);
+    // #endif
+
+    // #ifdef drop
+    //     conv2d_fir_dis(bufferA, &conv2_w, &conv2_b, bufferB, quant_list); swap_buffer(bufferA, bufferB);
+    // #endif
+
+
+
+        
+
+        
+
+
+
+
+
+
 
         flatten(bufferA);
-    
+
+        quant(bufferA, bit_length);
         fc(bufferA, &fc1_w, &fc1_b, bufferB); swap_buffer(bufferA, bufferB);
+        
         quant(bufferA, bit_length);
         relu(bufferA, bufferB); swap_buffer(bufferA, bufferB);
-        //quant(bufferA, bit_length);
+
+        quant(bufferA, bit_length);
         fc(bufferA, &fc2_w, &fc2_b, bufferB);
+        
 
     //prediction
         unsigned prediction = 0;
         for(int k = 0; k < 10; ++k){
-            //printf("%d: %d\n", k, bufferB->data[k]);
+            printf("%d: %d\n", k, bufferB->data[k]);
             if(bufferB->data[k] > bufferB->data[prediction]) prediction = k;
         }
-        //printf("%dth prediction: %d, and = %d\n",i ,prediction, ans);
+        printf("%dth prediction: %d, ans = %d\n",i ,prediction, ans);
         
         //
         if (prediction == ans) right++;
@@ -236,14 +249,24 @@ int main(int argc, char *argv[]) {
         
     }
     //printf("right cnt = %d\n",right);
-    //printf("accuracy = %f\n", ((float)right)/in_num);
-    for (int t = 0; t < step_len; ++t) printf("%f\n", (((float)right)/in_num )* 100) ;
+    printf("accuracy = %f\n", ((float)right)/in_num);
+    //for (int t = 0; t < step_len; ++t) printf("%f\n", (((float)right)/in_num )* 100) ;
     
     // for (int i = 0; i < 10; ++i) {
     //     printf("%d class's wrong prob: %f\n", i,(((float)wrong_list[i])/(float)class_list[i] )* 100);
     // }
 
-#if defined(norm) || defined(norm_l2)
+/*************** weak weight norm **************************/
+
+    // for (int i = 0; i < 5; ++i) {
+    //     printf("%d ", conv2_w.data[i]);
+    // }
+    // printf("\n");
+    // weight_norm(&conv2_w, norm_l1);
+
+
+
+#if defined(norm) || defined(norm_l2) 
 /********* print norm l1 ***********/
     for (int i = 0; i < 40; ++i) {
         //printf("Norm l1_list[%d] = %lf\n",i, norm_l1[i]);
